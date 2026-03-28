@@ -4,14 +4,14 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'ios_storekit2'
-  s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.version          = '0.0.2'
+  s.summary          = 'Flutter plugin for iOS in-app purchases using StoreKit 2.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+Flutter plugin for iOS in-app purchases using StoreKit 2.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/abuharsky/flutter_ios_storekit2'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'abuharsky' => 'noreply@users.noreply.github.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'

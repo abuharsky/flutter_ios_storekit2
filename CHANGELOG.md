@@ -1,5 +1,7 @@
-## Unreleased
+## 0.0.2
 
+- Compatibility: lowered the package SDK constraint to `>=3.0.0 <4.0.0`
+- Compatibility: lowered `flutter_lints` in the package and example so the repo resolves on Dart 3.0 toolchains
 - Breaking: `SK2ProductType.oneTime` was replaced with `SK2ProductType.consumable` and `SK2ProductType.nonConsumable`
 - Breaking: subscription periods are now exposed canonically as `SK2Period(value, unit)`; `periodDays` remains only as derived sugar
 - Breaking: intro offer eligibility is now modeled as `SK2EligibilityStatus`, while `isTrialEligible` becomes `bool?`

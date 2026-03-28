@@ -12,7 +12,7 @@ class MockIosStorekit2Platform
   @override
   Future<List<SK2Product>> getProducts(Set<String> identifiers) async {
     return [
-      SK2Product(
+      const SK2Product(
         id: 'test_product',
         displayName: 'Test',
         description: 'Test product',

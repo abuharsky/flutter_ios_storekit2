@@ -274,7 +274,7 @@ class _StorePageState extends State<StorePage> {
                   if (subscription != null) ...[
                     _formatPeriod(subscription.period),
                     if (subscription.isAutoRenewable) 'auto-renewable',
-                    ?introOfferLabel,
+                    if (introOfferLabel != null) introOfferLabel,
                   ],
                 ].join(' · '),
               ),
