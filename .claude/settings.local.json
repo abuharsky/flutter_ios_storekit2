@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter test:*)",
+      "Bash(find /Users/alexander/Documents/FlutterProjects/radiotoolkit-plugins/ios_storekit2 -type f \\\\\\(-name *.storekit -o -name project.pbxproj -o -name *Tests.swift \\\\\\))",
+      "Bash(ls /Users/alexander/Documents/FlutterProjects/radiotoolkit-plugins/ios_storekit2/example/ios/*.xcworkspace)",
+      "Bash(ls /Users/alexander/Documents/FlutterProjects/radiotoolkit-plugins/ios_storekit2/example/ios/*.xcodeproj)",
+      "Bash(flutter build:*)",
+      "Bash(xcodebuild test:*)",
+      "Bash(xcresulttool get:*)"
+    ]
+  }
+}
