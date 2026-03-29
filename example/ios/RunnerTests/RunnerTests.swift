@@ -1,3 +1,4 @@
+import Flutter
 import StoreKit
 import StoreKitTest
 import XCTest
@@ -321,6 +322,53 @@ final class RunnerTests: XCTestCase {
 
     let restoredEntitlement = await findEntitlement(for: ProductID.lifetime)
     XCTAssertNotNil(restoredEntitlement)
+  }
+
+  func testMakeFlutterErrorIncludesNativeNSErrorDetails() throws {
+    let underlying = NSError(
+      domain: "UnderlyingErrorDomain",
+      code: 12,
+      userInfo: [NSLocalizedDescriptionKey: "Underlying issue"]
+    )
+    let nativeError = NSError(
+      domain: "SKTestErrorDomain",
+      code: 4097,
+      userInfo: [
+        NSLocalizedDescriptionKey: "Restore failed",
+        NSLocalizedFailureReasonErrorKey: "Not signed in",
+        NSLocalizedRecoverySuggestionErrorKey: "Open Settings and sign in",
+        NSUnderlyingErrorKey: underlying,
+        "productIds": ["com.example.monthly"],
+        "retryAfter": 30,
+      ]
+    )
+
+    let flutterError = makeFlutterError(code: "RESTORE_ERROR", error: nativeError)
+
+    XCTAssertEqual(flutterError.code, "RESTORE_ERROR")
+    XCTAssertEqual(flutterError.message, "Restore failed")
+
+    let details = try XCTUnwrap(flutterError.details as? [String: Any])
+    XCTAssertEqual(details["nativeErrorDomain"] as? String, "SKTestErrorDomain")
+    XCTAssertEqual(details["nativeErrorCode"] as? Int, 4097)
+    XCTAssertEqual(details["nativeLocalizedDescription"] as? String, "Restore failed")
+    XCTAssertEqual(details["nativeLocalizedFailureReason"] as? String, "Not signed in")
+    XCTAssertEqual(
+      details["nativeLocalizedRecoverySuggestion"] as? String,
+      "Open Settings and sign in"
+    )
+
+    let userInfo = try XCTUnwrap(details["nativeErrorUserInfo"] as? [String: Any])
+    XCTAssertEqual(userInfo["NSLocalizedDescription"] as? String, "Restore failed")
+    XCTAssertEqual(userInfo["NSLocalizedFailureReason"] as? String, "Not signed in")
+    XCTAssertEqual(userInfo["NSLocalizedRecoverySuggestion"] as? String, "Open Settings and sign in")
+    XCTAssertEqual(userInfo["productIds"] as? [String], ["com.example.monthly"])
+    XCTAssertEqual(userInfo["retryAfter"] as? Int, 30)
+
+    let nestedError = try XCTUnwrap(userInfo["NSUnderlyingError"] as? [String: Any])
+    XCTAssertEqual(nestedError["nativeErrorDomain"] as? String, "UnderlyingErrorDomain")
+    XCTAssertEqual(nestedError["nativeErrorCode"] as? Int, 12)
+    XCTAssertEqual(nestedError["nativeLocalizedDescription"] as? String, "Underlying issue")
   }
 
   private func latestTransaction(for productID: String) throws -> SKTestTransaction {

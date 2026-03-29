@@ -1,3 +1,7 @@
+## 0.0.3
+
+- Fixed: native iOS failures now include rich `NSError` details in `PlatformException.details`, including domain, code, localized fields, and serialized `userInfo`
+
 ## 0.0.2
 
 - Compatibility: lowered the package SDK constraint to `>=3.0.0 <4.0.0`

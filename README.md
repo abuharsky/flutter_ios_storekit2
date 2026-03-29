@@ -44,6 +44,33 @@ if (result.status == SK2PurchaseStatus.success) {
 final entitlements = await storekit.getEntitlements();
 ```
 
+## Error Details
+
+Native iOS failures still use plugin-level `PlatformException.code` values such as
+`FETCH_ERROR`, `PURCHASE_ERROR`, and `RESTORE_ERROR`, but now also include the
+underlying `NSError` metadata in `PlatformException.details`:
+
+- `nativeErrorDomain`
+- `nativeErrorCode`
+- `nativeLocalizedDescription`
+- `nativeLocalizedFailureReason`
+- `nativeLocalizedRecoverySuggestion`
+- `nativeHelpAnchor`
+- `nativeErrorUserInfo` as a Flutter-safe serialized map
+
+```dart
+try {
+  await storekit.restorePurchases();
+} on PlatformException catch (e) {
+  final details = (e.details as Map?)?.cast<String, dynamic>();
+  print(e.code); // RESTORE_ERROR
+  print(details?['nativeErrorDomain']);
+  print(details?['nativeErrorCode']);
+  print(details?['nativeLocalizedFailureReason']);
+  print(details?['nativeErrorUserInfo']);
+}
+```
+
 ## Product Model
 
 - `SK2ProductType` now distinguishes `subscription`, `consumable`, and `nonConsumable`

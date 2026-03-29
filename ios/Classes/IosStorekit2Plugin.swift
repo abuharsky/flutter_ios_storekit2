@@ -2,6 +2,66 @@ import Flutter
 import StoreKit
 import UIKit
 
+private func serializeFlutterErrorValue(_ value: Any) -> Any {
+    switch value {
+    case let number as NSNumber:
+        return number
+    case let string as NSString:
+        return String(string)
+    case let url as URL:
+        return url.absoluteString
+    case let date as Date:
+        return Int(date.timeIntervalSince1970 * 1000)
+    case let error as NSError:
+        return makeFlutterErrorDetails(error: error)
+    case let array as [Any]:
+        return array.map(serializeFlutterErrorValue)
+    case let dictionary as [AnyHashable: Any]:
+        return Dictionary(uniqueKeysWithValues: dictionary.map { key, nestedValue in
+            (String(describing: key), serializeFlutterErrorValue(nestedValue))
+        })
+    case is NSNull:
+        return NSNull()
+    default:
+        return String(describing: value)
+    }
+}
+
+func makeFlutterErrorDetails(error: NSError) -> [String: Any] {
+    var details: [String: Any] = [
+        "nativeErrorDomain": error.domain,
+        "nativeErrorCode": error.code,
+        "nativeLocalizedDescription": error.localizedDescription,
+    ]
+
+    if let failureReason = error.localizedFailureReason {
+        details["nativeLocalizedFailureReason"] = failureReason
+    }
+
+    if let recoverySuggestion = error.localizedRecoverySuggestion {
+        details["nativeLocalizedRecoverySuggestion"] = recoverySuggestion
+    }
+
+    if let helpAnchor = error.helpAnchor {
+        details["nativeHelpAnchor"] = helpAnchor
+    }
+
+    if !error.userInfo.isEmpty {
+        details["nativeErrorUserInfo"] = serializeFlutterErrorValue(error.userInfo)
+    }
+
+    return details
+}
+
+func makeFlutterError(code: String, error: Error) -> FlutterError {
+    let nativeError = error as NSError
+    return FlutterError(
+        code: code,
+        message: nativeError.localizedDescription,
+        details: makeFlutterErrorDetails(error: nativeError)
+    )
+}
+
 public class IosStorekit2Plugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var storeManager: Any?
     private var eventSink: FlutterEventSink?
@@ -90,7 +150,7 @@ public class IosStorekit2Plugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 }
             } catch {
                 DispatchQueue.main.async {
-                    result(FlutterError(code: "FETCH_ERROR", message: error.localizedDescription, details: nil))
+                    result(makeFlutterError(code: "FETCH_ERROR", error: error))
                 }
             }
         }
@@ -112,7 +172,7 @@ public class IosStorekit2Plugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 }
             } catch {
                 DispatchQueue.main.async {
-                    result(FlutterError(code: "PURCHASE_ERROR", message: error.localizedDescription, details: nil))
+                    result(makeFlutterError(code: "PURCHASE_ERROR", error: error))
                 }
             }
         }
@@ -138,7 +198,7 @@ public class IosStorekit2Plugin: NSObject, FlutterPlugin, FlutterStreamHandler {
                 }
             } catch {
                 DispatchQueue.main.async {
-                    result(FlutterError(code: "RESTORE_ERROR", message: error.localizedDescription, details: nil))
+                    result(makeFlutterError(code: "RESTORE_ERROR", error: error))
                 }
             }
         }
