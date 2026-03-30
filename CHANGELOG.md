@@ -1,3 +1,7 @@
+## 0.0.4
+
+- Fixed: StoreKit 2 `networkError` failures now include nested `underlyingURLError` details inside `PlatformException.details`
+
 ## 0.0.3
 
 - Fixed: native iOS failures now include rich `NSError` details in `PlatformException.details`, including domain, code, localized fields, and serialized `userInfo`

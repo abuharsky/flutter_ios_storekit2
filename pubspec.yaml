@@ -1,6 +1,6 @@
 name: ios_storekit2
 description: "Flutter plugin for iOS in-app purchases using StoreKit 2."
-version: 0.0.3
+version: 0.0.4
 homepage: https://github.com/abuharsky/flutter_ios_storekit2
 repository: https://github.com/abuharsky/flutter_ios_storekit2
 issue_tracker: https://github.com/abuharsky/flutter_ios_storekit2/issues

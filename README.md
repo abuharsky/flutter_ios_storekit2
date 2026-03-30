@@ -57,6 +57,7 @@ underlying `NSError` metadata in `PlatformException.details`:
 - `nativeLocalizedRecoverySuggestion`
 - `nativeHelpAnchor`
 - `nativeErrorUserInfo` as a Flutter-safe serialized map
+- `underlyingURLError` when StoreKit surfaces a nested network transport error
 
 ```dart
 try {
@@ -68,6 +69,7 @@ try {
   print(details?['nativeErrorCode']);
   print(details?['nativeLocalizedFailureReason']);
   print(details?['nativeErrorUserInfo']);
+  print(details?['underlyingURLError']);
 }
 ```
 

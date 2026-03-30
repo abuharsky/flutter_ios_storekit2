@@ -55,10 +55,16 @@ func makeFlutterErrorDetails(error: NSError) -> [String: Any] {
 
 func makeFlutterError(code: String, error: Error) -> FlutterError {
     let nativeError = error as NSError
+    var details = makeFlutterErrorDetails(error: nativeError)
+
+    if #available(iOS 15.0, *), case StoreKit.StoreKitError.networkError(let urlError) = error {
+        details["underlyingURLError"] = makeFlutterErrorDetails(error: urlError as NSError)
+    }
+
     return FlutterError(
         code: code,
         message: nativeError.localizedDescription,
-        details: makeFlutterErrorDetails(error: nativeError)
+        details: details
     )
 }
 
