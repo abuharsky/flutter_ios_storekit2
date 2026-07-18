@@ -129,6 +129,8 @@ public class IosStorekit2Plugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             handlePurchase(call: call, result: result, manager: manager)
         case "getEntitlements":
             handleGetEntitlements(result: result, manager: manager)
+        case "getStorefront":
+            handleGetStorefront(result: result, manager: manager)
         case "restorePurchases":
             handleRestorePurchases(result: result, manager: manager)
         default:
@@ -170,9 +172,18 @@ public class IosStorekit2Plugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             return
         }
 
+        var appAccountToken: UUID?
+        if let tokenString = args["appAccountToken"] as? String {
+            guard let uuid = UUID(uuidString: tokenString) else {
+                result(FlutterError(code: "INVALID_ARGS", message: "appAccountToken is not a valid UUID", details: nil))
+                return
+            }
+            appAccountToken = uuid
+        }
+
         Task {
             do {
-                let purchaseResult = try await manager.purchase(productID: productId)
+                let purchaseResult = try await manager.purchase(productID: productId, appAccountToken: appAccountToken)
                 DispatchQueue.main.async {
                     result(purchaseResult)
                 }
@@ -190,6 +201,16 @@ public class IosStorekit2Plugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             let entitlements = await manager.currentEntitlements()
             DispatchQueue.main.async {
                 result(entitlements)
+            }
+        }
+    }
+
+    @available(iOS 15.0, *)
+    private func handleGetStorefront(result: @escaping FlutterResult, manager: StoreKit2Manager) {
+        Task {
+            let storefront = await manager.getStorefront()
+            DispatchQueue.main.async {
+                result(storefront)
             }
         }
     }

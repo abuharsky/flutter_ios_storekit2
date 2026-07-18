@@ -25,10 +25,14 @@ class MethodChannelIosStorekit2 extends IosStorekit2Platform {
   }
 
   @override
-  Future<SK2PurchaseResult> purchase(String productId) async {
+  Future<SK2PurchaseResult> purchase(String productId,
+      {String? appAccountToken}) async {
     final result = await _methodChannel.invokeMapMethod<String, dynamic>(
       'purchase',
-      {'productId': productId},
+      {
+        'productId': productId,
+        if (appAccountToken != null) 'appAccountToken': appAccountToken,
+      },
     );
     return SK2PurchaseResult.fromMap(result!);
   }
@@ -42,6 +46,14 @@ class MethodChannelIosStorekit2 extends IosStorekit2Platform {
             ?.map((m) => SK2Entitlement.fromMap(Map<String, dynamic>.from(m)))
             .toList() ??
         [];
+  }
+
+  @override
+  Future<SK2Storefront?> getStorefront() async {
+    final result = await _methodChannel.invokeMapMethod<String, dynamic>(
+      'getStorefront',
+    );
+    return result != null ? SK2Storefront.fromMap(result) : null;
   }
 
   @override

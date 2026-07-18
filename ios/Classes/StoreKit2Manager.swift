@@ -23,15 +23,35 @@ class StoreKit2Manager {
         return products.map { mapProduct($0) }
     }
 
+    // MARK: - Storefront
+
+    func getStorefront() async -> [String: Any]? {
+        guard let storefront = await Storefront.current else {
+            return nil
+        }
+
+        // countryCode is ISO 3166-1 alpha-3 ("USA", "RUS") — returned as-is,
+        // mapping to alpha-2 is the consumer's responsibility.
+        return [
+            "countryCode": storefront.countryCode,
+            "id": storefront.id,
+        ]
+    }
+
     // MARK: - Purchase
 
-    func purchase(productID: String) async throws -> [String: Any] {
+    func purchase(productID: String, appAccountToken: UUID? = nil) async throws -> [String: Any] {
         let products = try await Product.products(for: [productID])
         guard let product = products.first else {
             throw StoreKit2Error.productNotFound
         }
 
-        let result = try await product.purchase()
+        var options: Set<Product.PurchaseOption> = []
+        if let appAccountToken {
+            options.insert(.appAccountToken(appAccountToken))
+        }
+
+        let result = try await product.purchase(options: options)
 
         switch result {
         case .success(let verification):
@@ -181,6 +201,10 @@ class StoreKit2Manager {
             entry["introOfferType"] = introOfferType
         }
 
+        if let appAccountToken = transaction.appAccountToken {
+            entry["appAccountToken"] = appAccountToken.uuidString
+        }
+
         return entry
     }
 
@@ -252,6 +276,7 @@ class StoreKit2Manager {
             "displayName": product.displayName,
             "description": product.description,
             "price": NSDecimalNumber(decimal: product.price).doubleValue,
+            "displayPrice": product.displayPrice,
             "currencyCode": product.priceFormatStyle.currencyCode,
             "type": productTypeName(product.type),
         ]
@@ -271,6 +296,7 @@ class StoreKit2Manager {
             if let intro = product.subscription?.introductoryOffer {
                 var introOfferMap: [String: Any] = [
                     "price": NSDecimalNumber(decimal: intro.price).doubleValue,
+                    "displayPrice": intro.displayPrice,
                     "currencyCode": product.priceFormatStyle.currencyCode,
                     "offerType": offerTypeName(intro.paymentMode),
                 ]

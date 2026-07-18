@@ -19,9 +19,12 @@ abstract class IosStorekit2Platform extends PlatformInterface {
 
   Future<List<SK2Product>> getProducts(Set<String> identifiers);
 
-  Future<SK2PurchaseResult> purchase(String productId);
+  Future<SK2PurchaseResult> purchase(String productId,
+      {String? appAccountToken});
 
   Future<List<SK2Entitlement>> getEntitlements();
+
+  Future<SK2Storefront?> getStorefront();
 
   Future<void> restorePurchases();
 

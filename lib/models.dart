@@ -52,11 +52,15 @@ class SK2IntroOfferInfo {
   final double price;
   final String currencyCode;
 
+  /// Localized price string from the store; null with older native code.
+  final String? displayPrice;
+
   const SK2IntroOfferInfo({
     required this.offerType,
     required this.period,
     required this.price,
     required this.currencyCode,
+    this.displayPrice,
   });
 
   factory SK2IntroOfferInfo.fromMap(Map<String, dynamic> map) {
@@ -70,6 +74,7 @@ class SK2IntroOfferInfo {
             ),
       price: (map['price'] as num).toDouble(),
       currencyCode: map['currencyCode'] as String,
+      displayPrice: map['displayPrice'] as String?,
     );
   }
 
@@ -153,6 +158,9 @@ class SK2Product {
   final SK2ProductType type;
   final double price;
   final String currencyCode;
+
+  /// Localized price string from the store; null with older native code.
+  final String? displayPrice;
   final SK2SubscriptionInfo? subscription;
 
   const SK2Product({
@@ -162,6 +170,7 @@ class SK2Product {
     required this.type,
     required this.price,
     required this.currencyCode,
+    this.displayPrice,
     this.subscription,
   });
 
@@ -173,6 +182,7 @@ class SK2Product {
       type: SK2ProductType.values.byName(map['type'] as String),
       price: (map['price'] as num).toDouble(),
       currencyCode: map['currencyCode'] as String,
+      displayPrice: map['displayPrice'] as String?,
       subscription: map['subscription'] != null
           ? SK2SubscriptionInfo.fromMap(
               Map<String, dynamic>.from(map['subscription'] as Map),
@@ -194,6 +204,7 @@ class SK2PurchaseResult {
   final SK2OwnershipType? ownershipType;
   final bool isIntroOffer;
   final SK2OfferType? introOfferType;
+  final String? appAccountToken;
 
   const SK2PurchaseResult({
     required this.status,
@@ -207,6 +218,7 @@ class SK2PurchaseResult {
     this.ownershipType,
     this.isIntroOffer = false,
     this.introOfferType,
+    this.appAccountToken,
   });
 
   factory SK2PurchaseResult.fromMap(Map<String, dynamic> map) {
@@ -222,6 +234,7 @@ class SK2PurchaseResult {
       ownershipType: _ownershipTypeFromName(map['ownershipType'] as String?),
       isIntroOffer: (map['isIntroOffer'] as bool?) ?? false,
       introOfferType: _offerTypeFromMap(map),
+      appAccountToken: map['appAccountToken'] as String?,
     );
   }
 
@@ -241,6 +254,7 @@ class SK2Entitlement {
   final bool isIntroOffer;
   final SK2OfferType? introOfferType;
   final bool willAutoRenew;
+  final String? appAccountToken;
 
   const SK2Entitlement({
     required this.productId,
@@ -255,6 +269,7 @@ class SK2Entitlement {
     this.isIntroOffer = false,
     this.introOfferType,
     this.willAutoRenew = false,
+    this.appAccountToken,
   });
 
   factory SK2Entitlement.fromMap(Map<String, dynamic> map) {
@@ -273,10 +288,26 @@ class SK2Entitlement {
           ((map['isTrial'] as bool?) ?? false),
       introOfferType: _offerTypeFromMap(map),
       willAutoRenew: (map['willAutoRenew'] as bool?) ?? false,
+      appAccountToken: map['appAccountToken'] as String?,
     );
   }
 
   bool get isTrial => introOfferType == SK2OfferType.freeTrial;
+}
+
+class SK2Storefront {
+  /// ISO 3166-1 alpha-3 country code as reported by StoreKit (e.g. "USA").
+  final String countryCode;
+  final String id;
+
+  const SK2Storefront({required this.countryCode, required this.id});
+
+  factory SK2Storefront.fromMap(Map<String, dynamic> map) {
+    return SK2Storefront(
+      countryCode: map['countryCode'] as String,
+      id: map['id'] as String,
+    );
+  }
 }
 
 SK2ProductType? _productTypeFromName(String? name) {

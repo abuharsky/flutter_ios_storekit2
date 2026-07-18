@@ -1,3 +1,10 @@
+## 0.0.5
+
+- Added: `getStorefront()` returning `SK2Storefront` with the raw StoreKit `countryCode` (ISO 3166-1 alpha-3, e.g. `USA`) and storefront `id`
+- Added: optional `appAccountToken` parameter in `purchase()`; a non-UUID string fails with `INVALID_ARGS`
+- Added: nullable `appAccountToken` on `SK2PurchaseResult` and `SK2Entitlement`, populated from the transaction
+- Added: nullable localized `displayPrice` on `SK2Product` and `SK2IntroOfferInfo`
+
 ## 0.0.4
 
 - Fixed: StoreKit 2 `networkError` failures now include nested `underlyingURLError` details inside `PlatformException.details`

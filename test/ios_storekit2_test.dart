@@ -24,7 +24,8 @@ class MockIosStorekit2Platform
   }
 
   @override
-  Future<SK2PurchaseResult> purchase(String productId) async {
+  Future<SK2PurchaseResult> purchase(String productId,
+      {String? appAccountToken}) async {
     return SK2PurchaseResult(
       status: SK2PurchaseStatus.success,
       productId: productId,
@@ -32,12 +33,18 @@ class MockIosStorekit2Platform
       transactionId: '1000000001',
       originalTransactionId: '1000000001',
       purchaseDate: DateTime.fromMillisecondsSinceEpoch(0),
+      appAccountToken: appAccountToken,
     );
   }
 
   @override
   Future<List<SK2Entitlement>> getEntitlements() async {
     return [];
+  }
+
+  @override
+  Future<SK2Storefront?> getStorefront() async {
+    return const SK2Storefront(countryCode: 'USA', id: '143441');
   }
 
   @override
@@ -71,5 +78,26 @@ void main() {
 
     final result = await plugin.purchase('test_product');
     expect(result.status, SK2PurchaseStatus.success);
+  });
+
+  test('purchase forwards appAccountToken', () async {
+    IosStorekit2 plugin = IosStorekit2();
+    MockIosStorekit2Platform fakePlatform = MockIosStorekit2Platform();
+    IosStorekit2Platform.instance = fakePlatform;
+
+    const token = '123e4567-e89b-12d3-a456-426614174000';
+    final result =
+        await plugin.purchase('test_product', appAccountToken: token);
+    expect(result.appAccountToken, token);
+  });
+
+  test('getStorefront', () async {
+    IosStorekit2 plugin = IosStorekit2();
+    MockIosStorekit2Platform fakePlatform = MockIosStorekit2Platform();
+    IosStorekit2Platform.instance = fakePlatform;
+
+    final storefront = await plugin.getStorefront();
+    expect(storefront?.countryCode, 'USA');
+    expect(storefront?.id, '143441');
   });
 }

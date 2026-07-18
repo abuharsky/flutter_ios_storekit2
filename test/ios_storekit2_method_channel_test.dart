@@ -8,9 +8,13 @@ void main() {
   MethodChannelIosStorekit2 platform = MethodChannelIosStorekit2();
   const MethodChannel channel = MethodChannel('ios_storekit2');
 
+  final log = <MethodCall>[];
+
   setUp(() {
+    log.clear();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      log.add(methodCall);
       switch (methodCall.method) {
         case 'getProducts':
           return <Map>[
@@ -18,9 +22,22 @@ void main() {
               'id': 'test',
               'displayName': 'Test',
               'description': 'A test product',
-              'type': 'nonConsumable',
+              'type': 'subscription',
               'price': 9.99,
+              'displayPrice': r'$9.99',
               'currencyCode': 'USD',
+              'subscription': {
+                'isAutoRenewable': true,
+                'introOfferEligibility': 'eligible',
+                'period': {'value': 1, 'unit': 'month'},
+                'introOffer': {
+                  'offerType': 'freeTrial',
+                  'price': 0.0,
+                  'displayPrice': r'$0.00',
+                  'currencyCode': 'USD',
+                  'period': {'value': 7, 'unit': 'day'},
+                },
+              },
             },
           ];
         case 'purchase':
@@ -33,9 +50,21 @@ void main() {
             'purchaseDate': 0,
             'ownershipType': 'purchased',
             'isIntroOffer': false,
+            'appAccountToken': methodCall.arguments['appAccountToken'],
           };
         case 'getEntitlements':
-          return <Map>[];
+          return <Map>[
+            {
+              'productId': 'test',
+              'isActive': true,
+              'appAccountToken': '00000000-0000-0000-0000-000000000042',
+            },
+          ];
+        case 'getStorefront':
+          return {
+            'countryCode': 'USA',
+            'id': '143441',
+          };
         case 'restorePurchases':
           return null;
         default:
@@ -55,14 +84,75 @@ void main() {
     expect(products.first.id, 'test');
   });
 
+  test('getProducts parses displayPrice', () async {
+    final products = await platform.getProducts({'test'});
+    expect(products.first.displayPrice, r'$9.99');
+    expect(products.first.subscription?.introOffer?.displayPrice, r'$0.00');
+  });
+
+  test('getProducts tolerates missing displayPrice', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      return <Map>[
+        {
+          'id': 'test',
+          'displayName': 'Test',
+          'description': 'A test product',
+          'type': 'nonConsumable',
+          'price': 9.99,
+          'currencyCode': 'USD',
+        },
+      ];
+    });
+
+    final products = await platform.getProducts({'test'});
+    expect(products.first.displayPrice, isNull);
+  });
+
   test('purchase', () async {
     final result = await platform.purchase('test');
     expect(result.status.name, 'success');
+    expect(result.appAccountToken, isNull);
+    expect(
+      log.single.arguments,
+      {'productId': 'test'},
+    );
+  });
+
+  test('purchase passes appAccountToken to the channel', () async {
+    const token = '123e4567-e89b-12d3-a456-426614174000';
+    final result = await platform.purchase('test', appAccountToken: token);
+    expect(result.appAccountToken, token);
+    expect(
+      log.single.arguments,
+      {'productId': 'test', 'appAccountToken': token},
+    );
   });
 
   test('getEntitlements', () async {
     final entitlements = await platform.getEntitlements();
-    expect(entitlements, isEmpty);
+    expect(entitlements.length, 1);
+    expect(entitlements.first.productId, 'test');
+    expect(
+      entitlements.first.appAccountToken,
+      '00000000-0000-0000-0000-000000000042',
+    );
+  });
+
+  test('getStorefront', () async {
+    final storefront = await platform.getStorefront();
+    expect(storefront?.countryCode, 'USA');
+    expect(storefront?.id, '143441');
+  });
+
+  test('getStorefront returns null when native has no storefront', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      return null;
+    });
+
+    final storefront = await platform.getStorefront();
+    expect(storefront, isNull);
   });
 
   test('restorePurchases', () async {
