@@ -299,6 +299,7 @@ class StoreKit2Manager {
                     "displayPrice": intro.displayPrice,
                     "currencyCode": product.priceFormatStyle.currencyCode,
                     "offerType": offerTypeName(intro.paymentMode),
+                    "periodCount": intro.periodCount,
                 ]
 
                 if let period = subscriptionPeriodMap(intro.period) {

@@ -49,6 +49,11 @@ class SK2Period {
 class SK2IntroOfferInfo {
   final SK2OfferType offerType;
   final SK2Period period;
+
+  /// Number of periods the offer applies for (payAsYouGo: number of
+  /// billing cycles; payUpFront/freeTrial: 1). Defaults to 1 with older
+  /// native code that doesn't send it.
+  final int periodCount;
   final double price;
   final String currencyCode;
 
@@ -58,6 +63,7 @@ class SK2IntroOfferInfo {
   const SK2IntroOfferInfo({
     required this.offerType,
     required this.period,
+    this.periodCount = 1,
     required this.price,
     required this.currencyCode,
     this.displayPrice,
@@ -72,6 +78,7 @@ class SK2IntroOfferInfo {
               value: (map['periodDays'] as int?) ?? 0,
               unit: SK2PeriodUnit.day,
             ),
+      periodCount: (map['periodCount'] as num?)?.toInt() ?? 1,
       price: (map['price'] as num).toDouble(),
       currencyCode: map['currencyCode'] as String,
       displayPrice: map['displayPrice'] as String?,
