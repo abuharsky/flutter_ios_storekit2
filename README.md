@@ -11,6 +11,7 @@ Flutter plugin for iOS in-app purchases powered by StoreKit 2.
 - Current entitlements
 - Restore purchases
 - Transaction updates stream
+- Swift Package Manager and CocoaPods builds
 - StoreKit Test coverage in the `example` app
 
 ## Install
@@ -20,6 +21,20 @@ dependencies:
   ios_storekit2:
     path: ../ios_storekit2
 ```
+
+### Swift Package Manager And CocoaPods
+
+The iOS side ships both a Swift package (`ios/ios_storekit2/Package.swift`) and a
+podspec (`ios/ios_storekit2.podspec`), so the plugin builds either way with no extra
+setup on your side:
+
+- **Swift Package Manager** is used when SPM is enabled for your app. It is on by
+  default in recent Flutter versions; older ones need
+  `flutter config --enable-swift-package-manager`.
+- **CocoaPods** is used when SPM is turned off, or when your app is still Podfile-only.
+
+Both paths compile the same sources from `ios/ios_storekit2/Sources/ios_storekit2/`,
+so switching between them does not change plugin behavior.
 
 ## Basic Usage
 

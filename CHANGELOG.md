@@ -1,3 +1,13 @@
+## 0.0.7
+
+- Added: Swift Package Manager support via `ios/ios_storekit2/Package.swift`; the plugin now builds under both SPM and CocoaPods
+- Changed: iOS sources moved from `ios/Classes/` to `ios/ios_storekit2/Sources/ios_storekit2/`, and the podspec updated to match
+- Changed: the `PrivacyInfo.xcprivacy` manifest is now bundled by both build systems instead of being shipped unused
+
+## 0.0.6
+
+- Added: `periodCount` on `SK2IntroOfferInfo`, carrying the number of billing cycles a pay-as-you-go intro offer runs for; it defaults to `1` when paired with older native code
+
 ## 0.0.5
 
 - Added: `getStorefront()` returning `SK2Storefront` with the raw StoreKit `countryCode` (ISO 3166-1 alpha-3, e.g. `USA`) and storefront `id`

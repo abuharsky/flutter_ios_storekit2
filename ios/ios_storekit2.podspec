@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'ios_storekit2'
-  s.version          = '0.0.2'
+  s.version          = '0.0.7'
   s.summary          = 'Flutter plugin for iOS in-app purchases using StoreKit 2.'
   s.description      = <<-DESC
 Flutter plugin for iOS in-app purchases using StoreKit 2.
@@ -13,7 +13,7 @@ Flutter plugin for iOS in-app purchases using StoreKit 2.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'abuharsky' => 'noreply@users.noreply.github.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'ios_storekit2/Sources/ios_storekit2/**/*.swift'
   s.dependency 'Flutter'
   s.platform = :ios, '15.0'
 
@@ -21,9 +21,5 @@ Flutter plugin for iOS in-app purchases using StoreKit 2.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
   s.swift_version = '5.0'
 
-  # If your plugin requires a privacy manifest, for example if it uses any
-  # required reason APIs, update the PrivacyInfo.xcprivacy file to describe your
-  # plugin's privacy impact, and then uncomment this line. For more information,
-  # see https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
-  # s.resource_bundles = {'ios_storekit2_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
+  s.resource_bundles = {'ios_storekit2_privacy' => ['ios_storekit2/Sources/ios_storekit2/PrivacyInfo.xcprivacy']}
 end
