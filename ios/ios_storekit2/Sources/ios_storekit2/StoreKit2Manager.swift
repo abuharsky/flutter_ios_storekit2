@@ -3,7 +3,18 @@ import StoreKit
 @available(iOS 15.0, *)
 class StoreKit2Manager {
     private var updateListenerTask: Task<Void, Never>?
+
+    /// Sink and buffer are touched from the listener task and from whoever
+    /// sets the sink (main thread in the plugin, any thread in tests).
+    private let sinkLock = NSLock()
     private var transactionSink: (([String: Any]) -> Void)?
+
+    /// Updates that arrived while nobody listened, oldest first. They stay
+    /// unfinished until handed over: the listener starts at plugin
+    /// registration, the Dart side subscribes later, and StoreKit delivers
+    /// pending updates (renewals, refunds) right at launch — exactly in that
+    /// window. Finishing and dropping them there lost renewals for good.
+    private var pendingUpdates: [(entry: [String: Any], transaction: Transaction)] = []
 
     init() {
         startTransactionListener()
@@ -14,7 +25,42 @@ class StoreKit2Manager {
     }
 
     func setTransactionSink(_ sink: (([String: Any]) -> Void)?) {
+        let flushed = attachSink(sink)
+        for transaction in flushed {
+            Task { await transaction.finish() }
+        }
+    }
+
+    /// Sets the sink; a non-nil sink receives everything buffered, in order.
+    /// Returns the handed-over transactions, to be finished by the caller.
+    private func attachSink(_ sink: (([String: Any]) -> Void)?) -> [Transaction] {
+        sinkLock.lock()
+        defer { sinkLock.unlock() }
         transactionSink = sink
+        guard let sink, !pendingUpdates.isEmpty else { return [] }
+        let pending = pendingUpdates
+        pendingUpdates.removeAll()
+        NSLog("ios_storekit2: delivering %d transaction update(s) buffered before listener attached", pending.count)
+        // Dispatched under the lock so that an update arriving right now
+        // cannot overtake the buffered ones.
+        DispatchQueue.main.async {
+            for item in pending { sink(item.entry) }
+        }
+        return pending.map(\.transaction)
+    }
+
+    /// Hands [entry] to the sink, or buffers it while there is none.
+    /// Returns true when handed over (the caller then finishes it).
+    private func deliverOrBuffer(_ entry: [String: Any], transaction: Transaction) -> Bool {
+        sinkLock.lock()
+        defer { sinkLock.unlock() }
+        guard let sink = transactionSink else {
+            pendingUpdates.append((entry, transaction))
+            NSLog("ios_storekit2: buffered update for %@ until listener attaches", transaction.productID)
+            return false
+        }
+        DispatchQueue.main.async { sink(entry) }
+        return true
     }
 
     // MARK: - Fetch Products
@@ -141,9 +187,8 @@ class StoreKit2Manager {
                 guard let transaction = try? self.checkVerification(result) else { continue }
                 let product = await self.loadProduct(for: transaction.productID)
                 let entry = await self.entitlementMap(for: transaction, product: product)
-                await transaction.finish()
-                DispatchQueue.main.async {
-                    self.transactionSink?(entry)
+                if self.deliverOrBuffer(entry, transaction: transaction) {
+                    await transaction.finish()
                 }
             }
         }

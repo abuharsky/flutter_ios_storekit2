@@ -1,3 +1,7 @@
+## 0.0.8
+
+- Fixed: transaction updates (renewals, refunds, Ask to Buy approvals) that StoreKit delivered before the Dart side subscribed to the `transactions` stream were finished and dropped. StoreKit hands pending updates over right at launch, while the event channel is attached later, so a renewal could be lost for good and the app saw the old, expired transaction until the next launch. Such updates are now buffered, delivered in order once a listener attaches, and finished only after that
+
 ## 0.0.7
 
 - Added: Swift Package Manager support via `ios/ios_storekit2/Package.swift`; the plugin now builds under both SPM and CocoaPods

@@ -222,6 +222,45 @@ final class RunnerTests: XCTestCase {
     XCTAssertEqual(entitlement["willAutoRenew"] as? Bool, true)
   }
 
+  /// Запуск приложения: менеджер создаётся при регистрации плагина и сразу
+  /// слушает `Transaction.updates`, а Dart подписывается на канал позже.
+  /// Продление, пришедшее в этом окне, обязано дойти до подписчика, когда тот
+  /// появится, — а не пропасть, будучи уже финишированным в StoreKit.
+  func testRenewalBeforeListenerAttachesIsDeliveredLater() async throws {
+    _ = try await manager.purchase(productID: ProductID.monthly)
+
+    // Окно до подписки Dart: слушателя нет.
+    manager.setTransactionSink(nil)
+    try session.forceRenewalOfSubscription(productIdentifier: ProductID.monthly)
+    // Дать StoreKit доставить продление в Transaction.updates.
+    try await Task.sleep(nanoseconds: 3_000_000_000)
+
+    let delivered = expectation(description: "Renewal delivered after listener attached")
+    manager.setTransactionSink { entry in
+      if entry["productId"] as? String == ProductID.monthly,
+         entry["isActive"] as? Bool == true {
+        delivered.fulfill()
+      }
+    }
+    await fulfillment(of: [delivered], timeout: 5.0)
+
+    // Handed over — finished, StoreKit won't redeliver it on the next launch.
+    let finished = await waitUntil {
+      await self.unfinishedCount(for: ProductID.monthly) == 0
+    }
+    XCTAssertTrue(finished, "Delivered update must be finished")
+  }
+
+  private func unfinishedCount(for productID: String) async -> Int {
+    var count = 0
+    for await result in Transaction.unfinished {
+      if case .verified(let transaction) = result, transaction.productID == productID {
+        count += 1
+      }
+    }
+    return count
+  }
+
   func testPurchaseSubscriptionCreatesEntitlementWithExpiration() async throws {
     let purchase = try await manager.purchase(productID: ProductID.monthly)
     XCTAssertEqual(purchase["status"] as? String, "success")
